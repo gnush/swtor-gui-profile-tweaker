@@ -1,0 +1,104 @@
+package data.ini
+
+import scala.io.Source.*
+import scala.util.parsing.combinator.RegexParsers
+
+type Section = String
+type Key = String
+type Value = String
+type Ini = collection.mutable.Map[Section, collection.mutable.Map[Key, Value]]
+
+extension (ini: Ini)
+  def format: String = ini.foldRight("") {
+    case ((section, entries), sectionAcc) =>
+      s"[$section]\n${entries.foldRight("") {
+        case ((key, value), entriesAcc) => s"$key=$value\n$entriesAcc"
+      }}\n$sectionAcc"
+  }.dropRight(2)
+
+  def hasSection: Section => Boolean = ini.contains
+  def hasKey(section: Section, key: Key): Boolean = ini.contains(section) && ini(section).contains(key)
+
+  def put(section: Section, key: Key, value: Value): Boolean =
+    if (!section.isBlank && !key.isBlank && !value.isBlank)
+      if (hasKey(section, key))
+        ini(section)(key) = value
+      else if (hasSection(section))
+        ini(section) += key -> value
+      else
+        ini += section -> collection.mutable.Map(key -> value)
+      true
+    else
+      false
+
+object Ini:
+  def from(source: String): Option[Ini] = Parser.parse(Parser.ini, source) match {
+    case Success(result, _) => Some(result)
+    case _: NoSuccess => None
+  }
+
+  def apply(): Ini = collection.mutable.Map()
+
+// https://www.baeldung.com/scala/try-with-resources
+// import scala.util.Using
+//  def from(path: String): Option[Ini] = {
+//    Using(fromFile(path)) { source =>
+//      from(source.getLines() mkString "\n")
+//    }
+//  }
+
+  def read(file: String): Option[Ini] = {
+    val source = fromFile(file)
+    try from(source.getLines() mkString "\n") finally source.close()
+  }
+
+//object Section:
+//  def apply(name: String): Section = name
+//
+//object Key:
+//  def apply(name: String): Key = name
+//
+//object Value:
+//  def apply(value: String): Value = value
+
+
+object Parser extends RegexParsers {
+  private def id: Parser[String]   = """[\w_]+""".r
+  private def value: Parser[Value] = """[\w!"#$%&'(),./:;<>?@^_`{|}~*+\-\[\\\] ]+""".r  // TODO: remove # from match?
+  private def entry: Parser[(Key, Value)] = id ~ """[ \t]*=[ \t]*""".r ~ value ^^ { case key ~ _ ~ value => (key, value) }
+  private def sectionHeader: Parser[Section] = "[" ~ id ~ "]" ^^ { case _ ~ name ~ _ => name }
+  private def section: Parser[(Section, collection.mutable.Map[Key, Value])] = sectionHeader ~ entry.* ^^ { case name ~ entries => (name, collection.mutable.Map.from(entries)) }
+  def ini: Parser[Ini] = section.+ ^^ { collection.mutable.Map.from(_) }
+}
+
+
+val input: String =
+  """[settings]
+    |GUI_Foo_Bar=\[bar.123]
+    |bar=baz;;123;dsa;f;;
+    |baz=-856489
+    |lorem=[object Object]
+    |
+    |[other]
+    |one=is a number
+    |two=medium_sized
+    |three=$3""".stripMargin
+
+import Parser._
+
+// Default GUI Ini location %localappdata%\SWTOR\swtor\settings\GUIProfiles
+
+@main def main(): Unit =
+  //println(input)
+
+  val parsed = Ini.from(input)
+
+  parse(ini, input) match
+    case Success(result, _) => println(result)
+    case Failure(msg, _) => println(s"FAILURE: $msg")
+    case Error(msg, _) => println(s"ERROR: $msg")
+
+  parsed match {
+    case Some(ini) => println(ini.format)
+    case None => println("nothing")
+  }
