@@ -1,9 +1,11 @@
 package io.github.gnush.profiletweaker
 
 import io.github.gnush.profiletweaker.MainApp.stage
+import io.github.gnush.profiletweaker.data.{CharacterGuiStateItem, Server}
+import os.Path
 import scalafx.application.JFXApp3
 import scalafx.collections.ObservableBuffer
-import scalafx.geometry.Pos.{Center, CenterLeft, TopCenter}
+import scalafx.geometry.Pos.{Center, CenterLeft, CenterRight, TopCenter}
 import scalafx.geometry.{HPos, Insets}
 import scalafx.scene.control.*
 import scalafx.scene.layout.*
@@ -18,6 +20,9 @@ object MainApp extends JFXApp3:
   private var config = Config("")
   private val configFile = "config.ini"
 
+  private val guiPlayerStatePath = os.root / "%appdata%" / "SWTOR" / "swtor" / "settings"
+  //private val guiPlayerStatePath = os.Path("%appdata%/SWTOR/swtor/settings")
+
   override def start(): Unit = {
     //os.list(os.pwd).filter(_.segments.toList.last.startsWith(".")).foreach(println)
     //os.list(os.pwd / "src").foreach(println)
@@ -31,7 +36,7 @@ object MainApp extends JFXApp3:
     val theScene: Scene = Scene(root)
 
     stage = new JFXApp3.PrimaryStage {
-      title = "SWToR: GUI Profile Tweaker"
+      title = "SWToR: Player GUI State Tweaker"
       scene = theScene
     }
 
@@ -43,11 +48,15 @@ object MainApp extends JFXApp3:
 //
 //    println(s"user dir = ${System.getProperty("user.dir")}")
 
+    // Load config
     config = if (os.exists(os.pwd / configFile) && os.isReadable(os.pwd / configFile))
       Config(os.read(os.pwd / configFile))
     else
       Config()
     populateViewModel(config)
+
+    // Populate inis
+    loadInis(guiPlayerStatePath)
   }
 
   override def stopApp(): Unit = {
@@ -99,6 +108,7 @@ object MainApp extends JFXApp3:
 
 
   private def inisPane = new VBox {
+    alignment = TopCenter
 
     val f = File("/foo")
 
@@ -108,21 +118,22 @@ object MainApp extends JFXApp3:
       initialDirectory = if (f.exists()) f else File(".")
     }
 
-    val list = new ListView[String]{
-      items = ObservableBuffer.from(List("Foo", "Bar", "Baz"))
+    val list = new ListView[CharacterGuiStateItem]{
+      items = ViewModel.iniList
       prefHeight = 486
+      prefWidth = 320
     }
     list.selectionModel.value.setSelectionMode(SelectionMode.Multiple)
 
     children = Seq(
-      Text("GUI Profiles"),
+      Text("Player GUI State"),
       list,
       new HBox {
         children = Seq(
           new Button {
             text = "…"
             onMouseClicked = _ => {
-              println(dir.showDialog(stage))
+              loadInis(os.Path(dir.showDialog(stage).getAbsolutePath))
             }
           },
           Text("path/to/profiles")
@@ -151,10 +162,6 @@ object MainApp extends JFXApp3:
       },
       new HBox {
         children = Seq (
-          new Button {
-            text = "save for later"
-            onMouseClicked = _ => println("foo")
-          },
           new HBox { hgrow = Always },
           new Button {
             text = "apply to selected"
@@ -191,4 +198,18 @@ object MainApp extends JFXApp3:
 
     if (config.hasBeenChanged && os.isWritable(os.pwd))
       os.write.over(os.pwd / configFile, config.toIniFormat)
+  }
+
+  private def loadInis(path: Path): Unit = {
+    if (os.exists(path) && os.isReadable(path))
+      os.list(path).filter(_.segments.toList.last.contains("PlayerGUIState.ini")) foreach { path =>
+        val file = path.segments.toList.last.split('_')
+
+        if (file.length == 3 && Server.fromId.isDefinedAt(file(0)))
+          ViewModel.iniList.add(CharacterGuiStateItem(
+            path = path,
+            server = Server.fromId(file(0)),
+            characterName = file(1)
+          ))
+      }
   }

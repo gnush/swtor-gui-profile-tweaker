@@ -1,4 +1,4 @@
-package data.ini
+package io.github.gnush.profiletweaker.data.ini
 
 import scala.io.Source.*
 import scala.util.parsing.combinator.RegexParsers
@@ -84,7 +84,7 @@ val input: String =
     |two=medium_sized
     |three=$3""".stripMargin
 
-import Parser._
+import io.github.gnush.profiletweaker.data.ini.Parser.*
 
 // Default GUI Ini location %localappdata%\SWTOR\swtor\settings\GUIProfiles
 
