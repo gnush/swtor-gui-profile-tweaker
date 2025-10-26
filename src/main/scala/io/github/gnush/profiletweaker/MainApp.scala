@@ -2,26 +2,23 @@ package io.github.gnush.profiletweaker
 
 import io.github.gnush.profiletweaker.MainApp.stage
 import io.github.gnush.profiletweaker.data.{CharacterGuiStateItem, Server}
-import os.Path
 import scalafx.application.JFXApp3
 import scalafx.collections.ObservableBuffer
-import scalafx.geometry.Pos.{Center, CenterLeft, CenterRight, TopCenter}
+import scalafx.geometry.Pos.{Center, CenterLeft, TopCenter}
 import scalafx.geometry.{HPos, Insets}
 import scalafx.scene.control.*
+import scalafx.scene.control.Alert.AlertType.{Information}
 import scalafx.scene.layout.*
 import scalafx.scene.layout.Priority.Always
 import scalafx.scene.text.Text
 import scalafx.scene.{Node, Scene}
-import scalafx.stage.{DirectoryChooser, Stage}
+import scalafx.stage.DirectoryChooser
 
 import java.io.File
 
 object MainApp extends JFXApp3:
   private var config = Config("")
   private val configFile = "config.ini"
-
-  private val guiPlayerStatePath = os.root / "%appdata%" / "SWTOR" / "swtor" / "settings"
-  //private val guiPlayerStatePath = os.Path("%appdata%/SWTOR/swtor/settings")
 
   override def start(): Unit = {
     //os.list(os.pwd).filter(_.segments.toList.last.startsWith(".")).foreach(println)
@@ -55,8 +52,8 @@ object MainApp extends JFXApp3:
       Config()
     populateViewModel(config)
 
-    // Populate inis
-    loadInis(guiPlayerStatePath)
+    // Populate available character gui states
+    loadInis(config.guiStateLocation)
   }
 
   override def stopApp(): Unit = {
@@ -70,7 +67,7 @@ object MainApp extends JFXApp3:
       left = 4,
       right = 2
     )
-    children = Seq(settings, inisPane, editPane)
+    children = Seq(settings, availablePlayerGuiStatePane, editPane)
     spacing = 8
   }
 
@@ -107,36 +104,42 @@ object MainApp extends JFXApp3:
 
 
 
-  private def inisPane = new VBox {
+  private def availablePlayerGuiStatePane = new VBox {
     alignment = TopCenter
 
-    val f = File("/foo")
-
-    val dir = new DirectoryChooser {
-      title = "GUI Profile Location"
-      //if (f.exists()) initialDirectory = f
-      initialDirectory = if (f.exists()) f else File(".")
-    }
-
-    val list = new ListView[CharacterGuiStateItem]{
-      items = ViewModel.iniList
+    val playGuiStateTargets = new ListView[CharacterGuiStateItem]{
+      items = ViewModel.playerGuiStateTargets
       prefHeight = 486
       prefWidth = 320
     }
-    list.selectionModel.value.setSelectionMode(SelectionMode.Multiple)
+    playGuiStateTargets.selectionModel.value.setSelectionMode(SelectionMode.Multiple)
 
     children = Seq(
       Text("Player GUI State"),
-      list,
+      playGuiStateTargets,
       new HBox {
         children = Seq(
           new Button {
             text = "…"
             onMouseClicked = _ => {
-              loadInis(os.Path(dir.showDialog(stage).getAbsolutePath))
+              val dir = new DirectoryChooser {
+                title = "Pick Player GUI State Location"
+
+                File(ViewModel.playerGuiStateLocation.value) match {
+                  case initial if initial.exists() => initialDirectory = initial
+                  case _ =>
+                }
+              }
+
+              Option(dir.showDialog(stage)) match {
+                case Some(dir) if dir.exists() =>
+                  ViewModel.playerGuiStateLocation.value = dir.getAbsolutePath
+                  loadInis(ViewModel.playerGuiStateLocation.value)
+                case _ =>
+              }
             }
           },
-          Text("path/to/profiles")
+          new Text { text <==> ViewModel.playerGuiStateLocation }
         )
         alignment = CenterLeft
         spacing = 4
@@ -157,7 +160,7 @@ object MainApp extends JFXApp3:
     children = Seq(
       Text("[settings]"),
       new TextArea {
-        text <==> ViewModel.profileSettings
+        text <==> ViewModel.guiStateSettings
         prefHeight = 486
       },
       new HBox {
@@ -184,7 +187,8 @@ object MainApp extends JFXApp3:
     ViewModel.doBackup.value = config.backup
     ViewModel.overwriteBackup.value = config.overwriteBackup
     ViewModel.backupDir.value = config.backupDir
-    ViewModel.profileSettings.value = config.profileSettings
+    ViewModel.guiStateSettings.value = config.guiStateSettings
+    ViewModel.playerGuiStateLocation.value = config.guiStateLocation
   }
 
   /**
@@ -194,22 +198,31 @@ object MainApp extends JFXApp3:
     config.backup = ViewModel.doBackup.value
     config.overwriteBackup = ViewModel.overwriteBackup.value
     config.backupDir = ViewModel.backupDir.value
-    config.profileSettings = ViewModel.profileSettings.value
+    config.guiStateSettings = ViewModel.guiStateSettings.value
+    config.guiStateLocation = ViewModel.playerGuiStateLocation.value
 
     if (config.hasBeenChanged && os.isWritable(os.pwd))
       os.write.over(os.pwd / configFile, config.toIniFormat)
   }
 
-  private def loadInis(path: Path): Unit = {
+  private def loadInis(location: String): Unit = try {
+    val path = os.Path(location)
     if (os.exists(path) && os.isReadable(path))
       os.list(path).filter(_.segments.toList.last.contains("PlayerGUIState.ini")) foreach { path =>
         val file = path.segments.toList.last.split('_')
 
         if (file.length == 3 && Server.fromId.isDefinedAt(file(0)))
-          ViewModel.iniList.add(CharacterGuiStateItem(
+          ViewModel.playerGuiStateTargets.add(CharacterGuiStateItem(
             path = path,
             server = Server.fromId(file(0)),
             characterName = file(1)
           ))
       }
+  } catch {
+    case e: IllegalArgumentException => new Alert(Information) {
+      initOwner(stage)
+      title = "Could not load GUI State Directory"
+      headerText = "Could not load GUI State Directory"
+      contentText = e.getMessage
+    }.show()
   }

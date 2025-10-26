@@ -11,6 +11,7 @@ class Config(private val ini: Ini = Ini()) {
   private val backupKey = "doBackup"
   private val overwriteBackupKey = "overwriteBackup"
   private val backupDirKey = "backupDir"
+  private val guiStateLocationKey = "guiPlayerStateLocation"
   private val ProfileSection = "gui_profile_settings"
 
   private var _hasBeenChanged = false
@@ -28,13 +29,22 @@ class Config(private val ini: Ini = Ini()) {
 
   def backupDir_=(dirName: String): Unit = update(ConfigSection, backupDirKey, dirName)
 
-  def profileSettings: String =
+  def guiStateLocation: String = get(ConfigSection, guiStateLocationKey) getOrElse (
+    if (System.getProperty("os.name").toLowerCase.contains("windows"))
+      "/%appdata%/SWTOR/swtor/settings"
+    else
+      os.home.toString
+  )
+
+  def guiStateLocation_=(location: String): Unit = update(ConfigSection, guiStateLocationKey, location)
+
+  def guiStateSettings: String =
     if (ini.hasSection(ProfileSection))
       ini(ProfileSection).map((key, value) => s"$key=$value").mkString("\n")
     else
       ""
 
-  def profileSettings_=(settings: String): Unit = {
+  def guiStateSettings_=(settings: String): Unit = {
     // current profile settings as ini
     val ini = Ini.from(s"[$ProfileSection]\n" + settings) getOrElse Ini()
 
