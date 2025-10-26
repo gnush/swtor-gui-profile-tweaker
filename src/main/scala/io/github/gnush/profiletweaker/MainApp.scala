@@ -7,7 +7,7 @@ import scalafx.collections.ObservableBuffer
 import scalafx.geometry.Pos.{Center, CenterLeft, TopCenter}
 import scalafx.geometry.{HPos, Insets}
 import scalafx.scene.control.*
-import scalafx.scene.control.Alert.AlertType.{Information}
+import scalafx.scene.control.Alert.AlertType.Information
 import scalafx.scene.layout.*
 import scalafx.scene.layout.Priority.Always
 import scalafx.scene.text.Text
@@ -139,7 +139,12 @@ object MainApp extends JFXApp3:
               }
             }
           },
-          new Text { text <==> ViewModel.playerGuiStateLocation }
+          //new Text { text <==> ViewModel.playerGuiStateLocation },
+          new TextField {
+            text <==> ViewModel.playerGuiStateLocation
+            editable = false
+            hgrow = Always
+          }
         )
         alignment = CenterLeft
         spacing = 4
@@ -150,7 +155,7 @@ object MainApp extends JFXApp3:
           left = 0,
           right = 0
         )
-        style = "-fx-border-color: black;-fx-border-radius: 4px; -fx-border-width: 1px"
+        //style = "-fx-border-color: black;-fx-border-radius: 4px; -fx-border-width: 1px"
       }
     )
   }
@@ -167,8 +172,8 @@ object MainApp extends JFXApp3:
         children = Seq (
           new HBox { hgrow = Always },
           new Button {
-            text = "apply to selected"
-            onMouseClicked = _ => println("foo")
+            text = "Apply"
+            onMouseClicked = _ => println("TODO") // TODO
           }
         )
         alignment = Center
