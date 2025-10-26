@@ -3,7 +3,6 @@ package io.github.gnush.profiletweaker
 import io.github.gnush.profiletweaker.MainApp.stage
 import io.github.gnush.profiletweaker.data.ini.*
 import io.github.gnush.profiletweaker.data.{CharacterGuiStateItem, Server}
-import javafx.collections.ObservableList
 import os.Path
 import scalafx.application.JFXApp3
 import scalafx.collections.ObservableBuffer
@@ -23,7 +22,7 @@ import java.nio.file.{FileAlreadyExistsException, NoSuchFileException}
 import java.time.LocalDateTime
 
 object MainApp extends JFXApp3:
-  private var config = Config("")
+  private var config = Config()
   private val configFile = "config.ini"
 
   private var playGuiStateTargets: ListView[CharacterGuiStateItem] = null
@@ -36,10 +35,6 @@ object MainApp extends JFXApp3:
     }
     playGuiStateTargets.selectionModel.value.setSelectionMode(SelectionMode.Multiple)
 
-    //os.list(os.pwd).filter(_.segments.toList.last.startsWith(".")).foreach(println)
-    //os.list(os.pwd / "src").foreach(println)
-    //os.copy(FROM, TO, mergeFolders = true, replaceExisting = true)
-
 //    val root: Region = new BorderPane {
 //      top = new Text { text = "Foo" }
 //      center = centerContent
@@ -51,14 +46,6 @@ object MainApp extends JFXApp3:
       title = "SWToR: Player GUI State Tweaker"
       scene = theScene
     }
-
-//    println(stage.getIcons.size())
-//    stage.getIcons.forEach(println)
-//
-//    println(s"pwd is writable: ${os.isWritable(os.pwd)}")
-//    println(s"backup dir exists: ${os.exists(os.pwd / ViewModel.backupDir())}")
-//
-//    println(s"user dir = ${System.getProperty("user.dir")}")
 
     // Load config
     config = if (os.exists(os.pwd / configFile) && os.isReadable(os.pwd / configFile))
@@ -108,16 +95,11 @@ object MainApp extends JFXApp3:
     new VBox{
       children = Seq(
         Text("Config"),
-        grid,
-        Text(s"working dir = ${os.pwd}"),
-        Text(s"home dir = ${os.home}"),
-        Text(s"root dir = ${os.root}")
+        grid
       )
       alignment = TopCenter
     }
   }
-
-
 
   private def availablePlayerGuiStatePane= new VBox {
     alignment = TopCenter
@@ -146,7 +128,6 @@ object MainApp extends JFXApp3:
               }
             }
           },
-          //new Text { text <==> ViewModel.playerGuiStateLocation },
           new TextField {
             text <==> ViewModel.playerGuiStateLocation
             editable = false
