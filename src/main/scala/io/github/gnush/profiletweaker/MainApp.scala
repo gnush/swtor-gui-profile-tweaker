@@ -3,8 +3,11 @@ package io.github.gnush.profiletweaker
 import io.github.gnush.profiletweaker.MainApp.stage
 import io.github.gnush.profiletweaker.data.ini.*
 import io.github.gnush.profiletweaker.data.{CharacterGuiStateItem, Server}
+import javafx.collections.ObservableList
+import os.Path
 import scalafx.application.JFXApp3
 import scalafx.collections.ObservableBuffer
+import scalafx.collections.CollectionIncludes.observableList2ObservableBuffer
 import scalafx.geometry.Pos.{Center, CenterLeft, TopCenter}
 import scalafx.geometry.{HPos, Insets}
 import scalafx.scene.control.*
@@ -16,6 +19,8 @@ import scalafx.scene.{Node, Scene}
 import scalafx.stage.DirectoryChooser
 
 import java.io.File
+import java.nio.file.{FileAlreadyExistsException, NoSuchFileException}
+import java.time.LocalDateTime
 
 object MainApp extends JFXApp3:
   private var config = Config("")
@@ -187,7 +192,16 @@ object MainApp extends JFXApp3:
           new HBox { hgrow = Always },
           new Button {
             text = "Apply"
-            onAction = _ => println("TODO") // TODO
+            onAction = _ => {
+              // backup selected items
+              backup(
+                location = ViewModel.playerGuiStateLocation.value,
+                backupDirName = ViewModel.backupDir.value,
+                paths = observableList2ObservableBuffer(playGuiStateTargets.selectionModel.value.getSelectedItems).toList.map(_.path)
+              )
+
+              // TODO: apply to selected items
+            }
           }
         )
         alignment = Center
@@ -245,3 +259,56 @@ object MainApp extends JFXApp3:
       contentText = e.getMessage
     }.show()
   }
+
+  private def backup(location: String, backupDirName: String, paths: List[Path]): Unit = try {
+    if (ViewModel.doBackup.value) {
+      val wd = Path(location)
+      val backupBasedir = wd / backupDirName
+      val latest = backupBasedir / "latest"
+
+      // Save old backup
+      if (!ViewModel.overwriteBackup.value && os.isDir(latest)) {
+        val now = if (System.getProperty("os.name").toLowerCase.contains("windows"))
+          LocalDateTime.now().toString.replace(':', '-')
+        else
+          LocalDateTime.now().toString
+        os.move(
+          from = latest,
+          to = backupBasedir / now,
+          createFolders = true
+        )
+      }
+
+      // Backup files
+      paths foreach { path =>
+        os.copy.over(
+          from = path,
+          to = latest / path.segments.toList.last,
+          createFolders = true
+        )
+      }
+    }
+  } catch {
+    case e: IllegalArgumentException => information(
+      titleSuffix = "Backup",
+      header = "Could not backup files",
+      content = e.getMessage
+    )
+    case e: NoSuchFileException => information(
+      titleSuffix = "Backup",
+      header = "Path does not exist",
+      content = e.getMessage
+    )
+    case e: FileAlreadyExistsException => information(
+      titleSuffix = "Backup",
+      header = "Target already exists",
+      content = e.getMessage
+    )
+  }
+
+  private def information(titleSuffix: String, header: String, content: String): Unit = new Alert(Information) {
+    initOwner(stage)
+    title = s"SW:ToR GUI State Tweaker - $titleSuffix"
+    headerText = header
+    contentText = content
+  }.showAndWait()

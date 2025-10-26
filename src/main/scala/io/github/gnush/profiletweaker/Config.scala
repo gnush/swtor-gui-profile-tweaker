@@ -25,7 +25,7 @@ class Config(private val ini: Ini = Ini()) {
 
   def overwriteBackup_=(value: Boolean): Unit = update(ConfigSection, overwriteBackupKey, value.toString)
 
-  def backupDir: String = get(ConfigSection, backupDirKey) getOrElse "backup"
+  def backupDir: String = get(ConfigSection, backupDirKey) getOrElse "backups"
 
   def backupDir_=(dirName: String): Unit = update(ConfigSection, backupDirKey, dirName)
 
