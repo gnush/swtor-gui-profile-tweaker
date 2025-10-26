@@ -1,6 +1,7 @@
 package io.github.gnush.profiletweaker
 
 import io.github.gnush.profiletweaker.MainApp.stage
+import io.github.gnush.profiletweaker.data.ini.*
 import io.github.gnush.profiletweaker.data.{CharacterGuiStateItem, Server}
 import scalafx.application.JFXApp3
 import scalafx.collections.ObservableBuffer
@@ -20,7 +21,16 @@ object MainApp extends JFXApp3:
   private var config = Config("")
   private val configFile = "config.ini"
 
+  private var playGuiStateTargets: ListView[CharacterGuiStateItem] = null
+
   override def start(): Unit = {
+    playGuiStateTargets = new ListView[CharacterGuiStateItem] {
+      items = ViewModel.playerGuiStateTargets
+      prefHeight = 486
+      prefWidth = 320
+    }
+    playGuiStateTargets.selectionModel.value.setSelectionMode(SelectionMode.Multiple)
+
     //os.list(os.pwd).filter(_.segments.toList.last.startsWith(".")).foreach(println)
     //os.list(os.pwd / "src").foreach(println)
     //os.copy(FROM, TO, mergeFolders = true, replaceExisting = true)
@@ -104,16 +114,8 @@ object MainApp extends JFXApp3:
 
 
 
-  private def availablePlayerGuiStatePane = new VBox {
+  private def availablePlayerGuiStatePane= new VBox {
     alignment = TopCenter
-
-    val playGuiStateTargets = new ListView[CharacterGuiStateItem]{
-      items = ViewModel.playerGuiStateTargets
-      prefHeight = 486
-      prefWidth = 320
-    }
-    playGuiStateTargets.selectionModel.value.setSelectionMode(SelectionMode.Multiple)
-
     children = Seq(
       Text("Player GUI State"),
       playGuiStateTargets,
@@ -121,7 +123,7 @@ object MainApp extends JFXApp3:
         children = Seq(
           new Button {
             text = "…"
-            onMouseClicked = _ => {
+            onAction = _ => {
               val dir = new DirectoryChooser {
                 title = "Pick Player GUI State Location"
 
@@ -161,19 +163,31 @@ object MainApp extends JFXApp3:
   }
 
   private def editPane = new VBox {
+    private val section = "Settings"
+
     alignment = TopCenter
     children = Seq(
-      Text("[settings]"),
+      Text(s"[$section]"),
       new TextArea {
         text <==> ViewModel.guiStateSettings
         prefHeight = 486
       },
       new HBox {
         children = Seq (
+          new Button {
+            text = "Load"
+            onAction = _ => {
+              val selected = Option(playGuiStateTargets.selectionModel.value.getSelectedItem)
+              if (selected.isDefined)
+                ViewModel.guiStateSettings.value =
+                  (Ini.from(os.read(selected.get.path)) getOrElse Ini())
+                    .format(section) getOrElse ""
+            }
+          },
           new HBox { hgrow = Always },
           new Button {
             text = "Apply"
-            onMouseClicked = _ => println("TODO") // TODO
+            onAction = _ => println("TODO") // TODO
           }
         )
         alignment = Center

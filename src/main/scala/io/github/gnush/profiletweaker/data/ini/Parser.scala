@@ -16,6 +16,16 @@ extension (ini: Ini)
       }}\n$sectionAcc"
   }.dropRight(2)
 
+  def format(section: Section): Option[String] = if (hasSection(section))
+    Some(
+      ini(section).foldRight("") {
+        case ((key, value), acc) =>
+          s"$key=$value\n$acc"
+      }
+    )
+  else
+    None
+  
   def hasSection: Section => Boolean = ini.contains
   def hasKey(section: Section, key: Key): Boolean = ini.contains(section) && ini(section).contains(key)
 

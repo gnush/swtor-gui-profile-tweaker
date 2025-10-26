@@ -12,7 +12,7 @@ class Config(private val ini: Ini = Ini()) {
   private val overwriteBackupKey = "overwriteBackup"
   private val backupDirKey = "backupDir"
   private val guiStateLocationKey = "guiPlayerStateLocation"
-  private val ProfileSection = "gui_profile_settings"
+  private val ProfileSection = "gui_state_settings"
 
   private var _hasBeenChanged = false
   def hasBeenChanged: Boolean = _hasBeenChanged
@@ -58,7 +58,7 @@ class Config(private val ini: Ini = Ini()) {
     // update profile settings
     ini foreach { (section, inner) =>
       inner foreach { (key, value) =>
-        println(s"updating $section with $key = $value")
+        //println(s"updating $section with $key = $value")
         update(section, key, value)
       }
     }
