@@ -17,7 +17,7 @@ lazy val root = (project in file("."))
 
 libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "2.4.0"
 libraryDependencies += "org.scalafx" %% "scalafx" % "23.0.1-R34"
-libraryDependencies += "com.lihaoyi" %% "os-lib" % "0.11.5"
+libraryDependencies += "com.lihaoyi" %% "os-lib" % "0.11.6"
 
 libraryDependencies ++= {
   // Determine OS version of JavaFX binaries
