@@ -3,6 +3,7 @@ package io.github.gnush.profiletweaker
 import io.github.gnush.profiletweaker.MainApp.stage
 import io.github.gnush.profiletweaker.data.ini.*
 import io.github.gnush.profiletweaker.data.{CharacterGuiStateItem, Server}
+import javafx.scene.input.KeyCode
 import os.Path
 import scalafx.application.JFXApp3
 import scalafx.collections.ObservableBuffer
@@ -21,13 +22,14 @@ import java.io.File
 import java.nio.file.{FileAlreadyExistsException, NoSuchFileException}
 import java.time.LocalDateTime
 
-// TODO:
-//  - make text area searchable
 object MainApp extends JFXApp3:
   private var config = Config()
   private val configFile = "config.ini"
 
+  // TODO
   private var playGuiStateTargets: ListView[CharacterGuiStateItem] = null
+  var guiStateSettings: TextArea = null
+  private var guiStateSettingsSearch: TextField = null
 
   override def start(): Unit = {
     playGuiStateTargets = new ListView[CharacterGuiStateItem] {
@@ -36,6 +38,37 @@ object MainApp extends JFXApp3:
       prefWidth = 320
     }
     playGuiStateTargets.selectionModel.value.setSelectionMode(SelectionMode.Multiple)
+
+    guiStateSettings = new TextArea {
+      text <==> ViewModel.guiStateSettings
+      prefHeight = 486
+
+      onKeyPressed = ev => ev.getCode match {
+        case KeyCode.F if ev.isShortcutDown =>
+          ViewModel.guiStateSettingsSearchVisible.value = true
+          guiStateSettingsSearch.requestFocus()
+
+        case KeyCode.ESCAPE => ViewModel.guiStateSettingsSearchVisible.value = false
+        case _ =>
+      }
+    }
+
+    guiStateSettingsSearch = new TextField {
+      text <==> ViewModel.guiStateSettingsSearch
+      visible <==> ViewModel.guiStateSettingsSearchVisible
+
+      onKeyPressed = ev => ev.getCode match {
+        case KeyCode.ESCAPE =>
+          ViewModel.guiStateSettingsSearchVisible.value = false
+          guiStateSettings.requestFocus()
+        case KeyCode.ENTER =>
+          ViewModel.findFirstIndicesInGuiStateSettings(ViewModel.guiStateSettingsSearch.value) match {
+            case Some((start, end)) => guiStateSettings.selectRange(start, end)
+            case None => guiStateSettings.deselect()
+          }
+        case _ =>
+      }
+    }
 
 //    val root: Region = new BorderPane {
 //      top = new Text { text = "Foo" }
@@ -152,15 +185,22 @@ object MainApp extends JFXApp3:
 
   private def editPane = new VBox {
     private val section = "Settings"
-
     alignment = TopCenter
     children = Seq(
       Text(s"[$section]"),
-      new TextArea {
-        text <==> ViewModel.guiStateSettings
-        prefHeight = 486
-      },
+//      new TextArea {
+//        text <==> ViewModel.guiStateSettings
+//        prefHeight = 486
+//
+//        onKeyPressed = ev => ev.getCode match {
+//          case KeyCode.F if ev.isShortcutDown => ViewModel.guiStateSettingsSearchVisible.value = true
+//          case KeyCode.ESCAPE => ViewModel.guiStateSettingsSearchVisible.value = false
+//          case _ =>
+//        }
+//      },
+      guiStateSettings,
       new HBox {
+        spacing = 6
         children = Seq (
           new Button {
             text = "Load"
@@ -172,6 +212,18 @@ object MainApp extends JFXApp3:
                     .format(section) getOrElse ""
             }
           },
+          new HBox { hgrow = Always },
+//          new TextField {
+//            text <==> ViewModel.guiStateSettingsSearch
+//            visible <==> ViewModel.guiStateSettingsSearchVisible
+//          },
+          guiStateSettingsSearch,
+//          new Button("Ʌ") { // TODO?
+//            visible <==> ViewModel.guiStateSettingsSearchVisible
+//          },
+//          new Button("V") {
+//            visible <==> ViewModel.guiStateSettingsSearchVisible
+//          },
           new HBox { hgrow = Always },
           new Button {
             text = "Apply"
