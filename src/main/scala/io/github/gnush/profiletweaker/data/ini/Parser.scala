@@ -2,11 +2,12 @@ package io.github.gnush.profiletweaker.data.ini
 
 import scala.io.Source.*
 import scala.util.parsing.combinator.RegexParsers
+import scala.collection.mutable
 
 type Section = String
 type Key = String
 type Value = String
-type Ini = collection.mutable.Map[Section, collection.mutable.Map[Key, Value]]
+type Ini = mutable.Map[Section, mutable.Map[Key, Value]]
 
 extension (ini: Ini)
   def format: String = ini.foldRight("") {
@@ -29,6 +30,13 @@ extension (ini: Ini)
   def hasSection: Section => Boolean = ini.contains
   def hasKey(section: Section, key: Key): Boolean = ini.contains(section) && ini(section).contains(key)
 
+  def put(section: Section, content: mutable.Map[Key, Value]): Boolean =
+    if (!section.isBlank)
+      ini += section -> content
+      true
+    else
+      false
+
   def put(section: Section, key: Key, value: Value): Boolean =
     if (!section.isBlank && !key.isBlank && !value.isBlank)
       if (hasKey(section, key))
@@ -36,7 +44,7 @@ extension (ini: Ini)
       else if (hasSection(section))
         ini(section) += key -> value
       else
-        ini += section -> collection.mutable.Map(key -> value)
+        ini += section -> mutable.Map(key -> value)
       true
     else
       false
@@ -47,7 +55,7 @@ object Ini:
     case _: NoSuccess => None
   }
 
-  def apply(): Ini = collection.mutable.Map()
+  def apply(): Ini = mutable.Map()
 
 // https://www.baeldung.com/scala/try-with-resources
 // import scala.util.Using
@@ -77,8 +85,8 @@ object Parser extends RegexParsers {
   private def value: Parser[Value] = """[\w!"#$%&'(),./:;<>?@^_`{|}~*+\-\[\\\] ]+""".r  // TODO: remove # from match?
   private def entry: Parser[(Key, Value)] = id ~ """[ \t]*=[ \t]*""".r ~ value ^^ { case key ~ _ ~ value => (key, value) }
   private def sectionHeader: Parser[Section] = "[" ~ id ~ "]" ^^ { case _ ~ name ~ _ => name }
-  private def section: Parser[(Section, collection.mutable.Map[Key, Value])] = sectionHeader ~ entry.* ^^ { case name ~ entries => (name, collection.mutable.Map.from(entries)) }
-  def ini: Parser[Ini] = section.+ ^^ { collection.mutable.Map.from(_) }
+  private def section: Parser[(Section, mutable.Map[Key, Value])] = sectionHeader ~ entry.* ^^ { case name ~ entries => (name, mutable.Map.from(entries)) }
+  def ini: Parser[Ini] = section.+ ^^ { mutable.Map.from(_) }
 }
 
 

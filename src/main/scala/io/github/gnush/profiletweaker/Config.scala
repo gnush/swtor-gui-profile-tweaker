@@ -2,6 +2,9 @@ package io.github.gnush.profiletweaker
 
 import data.ini.{Ini, Key, Section, Value, format, hasKey, hasSection, put}
 
+// TODO:
+//  - merge with ViewModel  (eliminates double data holding, but mixes "scopes")?
+//  - change hasBeenChanged from tracking updates to comparing with initial value
 class Config(private val ini: Ini = Ini()) {
   def this(config: String) = {
     this(Ini.from(config) getOrElse Ini())

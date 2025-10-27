@@ -21,6 +21,10 @@ import java.io.File
 import java.nio.file.{FileAlreadyExistsException, NoSuchFileException}
 import java.time.LocalDateTime
 
+// TODO:
+//  - sort when loading ini to text area
+//  - sort when saving to ini
+//  - make text area searchable
 object MainApp extends JFXApp3:
   private var config = Config()
   private val configFile = "config.ini"
@@ -174,14 +178,14 @@ object MainApp extends JFXApp3:
           new Button {
             text = "Apply"
             onAction = _ => {
-              // backup selected items
-              backup(
-                location = ViewModel.playerGuiStateLocation.value,
-                backupDirName = ViewModel.backupDir.value,
-                paths = observableList2ObservableBuffer(playGuiStateTargets.selectionModel.value.getSelectedItems).toList.map(_.path)
-              )
+              val selectedPaths = observableList2ObservableBuffer(playGuiStateTargets.selectionModel.value.getSelectedItems).toList.map(_.path)
 
-              // TODO: apply to selected items
+              if (backup( // backup selected items
+                location = ViewModel.playerGuiStateLocation.value,
+                  backupDirName = ViewModel.backupDir.value,
+                  paths = selectedPaths
+              ))
+                applyGuiStateSettings(selectedPaths)
             }
           }
         )
@@ -243,7 +247,7 @@ object MainApp extends JFXApp3:
     )
   }
 
-  private def backup(location: String, backupDirName: String, paths: List[Path]): Unit = try {
+  private def backup(location: String, backupDirName: String, paths: List[Path]): Boolean = try {
     if (ViewModel.doBackup.value) {
       val wd = Path(location)
       val backupBasedir = wd / backupDirName
@@ -271,27 +275,51 @@ object MainApp extends JFXApp3:
         )
       }
     }
+    true
   } catch {
     case e: IllegalArgumentException => information(
       titleSuffix = "Backup",
       header = "Could not backup files",
       content = e.getMessage
     )
+      false
     case e: NoSuchFileException => information(
       titleSuffix = "Backup",
       header = "Path does not exist",
       content = e.getMessage
     )
+      false
     case e: FileAlreadyExistsException => information(
       titleSuffix = "Backup",
       header = "Target already exists",
       content = e.getMessage
     )
+      false
     case e: Exception => information(
       titleSuffix = "Backup",
       header = "Unexpected",
       content = e.getMessage
     )
+      false
+  }
+
+  private def applyGuiStateSettings(paths: List[Path]): Unit = {
+    val desiredGuiState = ViewModel.guiStateSettingsAsMap
+    paths foreach { path => try {
+      if (os.exists(path) && os.isReadable(path) && os.isWritable(path)) {
+        val ini = Ini.from(os.read(path)) getOrElse Ini()
+        desiredGuiState foreach { (key, value) =>
+          ini.put("Settings", key, value)
+        }
+        os.write.over(path, ini.format)
+      }
+    } catch {
+      case e: Exception => information(
+        titleSuffix = "Apply Changes",
+        header = s"Could not apply changes to '${path.segments.toList.last}'",
+        content = e.getMessage
+      )
+    }}
   }
 
   private def information(header: String, content: String, titleSuffix: String = ""): Unit = new Alert(Information) {
