@@ -20,7 +20,7 @@ class Config(private val ini: Ini = Ini()) {
   private var _hasBeenChanged = false
   def hasBeenChanged: Boolean = _hasBeenChanged
 
-  def backup: Boolean = getBoolean(ConfigSection, backupKey) getOrElse false
+  def backup: Boolean = getBoolean(ConfigSection, backupKey) getOrElse true
 
   def backup_=(value: Boolean): Unit = update(ConfigSection, backupKey, value.toString)
 

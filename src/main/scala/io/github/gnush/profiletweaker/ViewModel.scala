@@ -10,7 +10,7 @@ object ViewModel:
   val overwriteBackup: BooleanProperty = BooleanProperty(false)
   val backupDir: StringProperty = StringProperty("")
 
-  val guiStateSettings: StringProperty = StringProperty("foo bar")
+  val guiStateSettings: StringProperty = StringProperty("")
   val guiStateSettingsSearch: StringProperty = new StringProperty(this, "", "") {
     onChange { (_, _, content) =>
       findFirstIndicesInGuiStateSettings(content) match {
