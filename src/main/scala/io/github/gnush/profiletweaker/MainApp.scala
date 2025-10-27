@@ -55,7 +55,7 @@ object MainApp extends JFXApp3:
     populateViewModel(config)
 
     // Populate available character gui states
-    loadInis(config.guiStateLocation)
+    loadGuiStateInis(config.guiStateLocation)
   }
 
   override def stopApp(): Unit = {
@@ -123,7 +123,7 @@ object MainApp extends JFXApp3:
               Option(dir.showDialog(stage)) match {
                 case Some(dir) if dir.exists() =>
                   ViewModel.playerGuiStateLocation.value = dir.getAbsolutePath
-                  loadInis(ViewModel.playerGuiStateLocation.value)
+                  loadGuiStateInis(ViewModel.playerGuiStateLocation.value)
                 case _ =>
               }
             }
@@ -219,7 +219,11 @@ object MainApp extends JFXApp3:
       os.write.over(os.pwd / configFile, config.toIniFormat)
   }
 
-  private def loadInis(location: String): Unit = try {
+  /**
+   * Load gui states inis into the [ViewModel]
+   * @param location The location of the directory to load the inis from
+   */
+  private def loadGuiStateInis(location: String): Unit = try {
     val path = os.Path(location)
     if (os.exists(path) && os.isReadable(path))
       os.list(path).filter(_.segments.toList.last.contains("PlayerGUIState.ini")) foreach { path =>
@@ -233,12 +237,10 @@ object MainApp extends JFXApp3:
           ))
       }
   } catch {
-    case e: IllegalArgumentException => new Alert(Information) {
-      initOwner(stage)
-      title = "Could not load GUI State Directory"
-      headerText = "Could not load GUI State Directory"
-      contentText = e.getMessage
-    }.show()
+    case e: IllegalArgumentException => information(
+      header = "Could not load GUI State Directory",
+      content = e.getMessage
+    )
   }
 
   private def backup(location: String, backupDirName: String, paths: List[Path]): Unit = try {
@@ -285,11 +287,17 @@ object MainApp extends JFXApp3:
       header = "Target already exists",
       content = e.getMessage
     )
+    case e: Exception => information(
+      titleSuffix = "Backup",
+      header = "Unexpected",
+      content = e.getMessage
+    )
   }
 
-  private def information(titleSuffix: String, header: String, content: String): Unit = new Alert(Information) {
+  private def information(header: String, content: String, titleSuffix: String = ""): Unit = new Alert(Information) {
     initOwner(stage)
-    title = s"SW:ToR GUI State Tweaker - $titleSuffix"
+    title = if (titleSuffix.isEmpty) s"SW:ToR GUI State Tweaker"
+            else s"SW:ToR GUI State Tweaker - $titleSuffix"
     headerText = header
     contentText = content
   }.showAndWait()
