@@ -64,10 +64,7 @@ object MainApp extends JFXApp3:
           ViewModel.guiStateSettingsSearchVisible.value = false
           guiStateSettings.requestFocus()
         case KeyCode.ENTER =>
-          ViewModel.findFirstIndicesInGuiStateSettings(ViewModel.guiStateSettingsSearch.value) match {
-            case Some((start, end)) => guiStateSettings.selectRange(start, end)
-            case None => guiStateSettings.deselect()
-          }
+          ViewModel.selectInGuiStateSettings()
         case _ =>
       }
     }
@@ -222,12 +219,24 @@ object MainApp extends JFXApp3:
 //            visible <==> ViewModel.guiStateSettingsSearchVisible
 //          },
           guiStateSettingsSearch,
-//          new Button("Ʌ") { // TODO?
-//            visible <==> ViewModel.guiStateSettingsSearchVisible
-//          },
-//          new Button("V") {
-//            visible <==> ViewModel.guiStateSettingsSearchVisible
-//          },
+          new Button("Ʌ") {
+            visible <==> ViewModel.guiStateSettingsSearchVisible
+            onAction = _ => {
+              ViewModel.guiStateSettingsSearchPosition.value match {
+                case Some(pos) => ViewModel.guiStateSettingsSearchPosition.value = Some(pos - 1)
+                case None => None
+              }
+            }
+          },
+          new Button("V") {
+            visible <==> ViewModel.guiStateSettingsSearchVisible
+            onAction = _ => {
+              ViewModel.guiStateSettingsSearchPosition.value = ViewModel.guiStateSettingsSearchPosition.value match {
+                case Some(pos) => Some(pos + 1)
+                case None => None
+              }
+            }
+          },
           new HBox { hgrow = Always },
           new Button {
             text = "Apply"
