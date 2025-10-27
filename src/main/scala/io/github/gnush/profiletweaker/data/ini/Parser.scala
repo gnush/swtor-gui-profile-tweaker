@@ -10,22 +10,55 @@ type Value = String
 type Ini = mutable.Map[Section, mutable.Map[Key, Value]]
 
 extension (ini: Ini)
-  def format: String = ini.foldRight("") {
-    case ((section, entries), sectionAcc) =>
-      s"[$section]\n${entries.foldRight("") {
-        case ((key, value), entriesAcc) => s"$key=$value\n$entriesAcc"
-      }}\n$sectionAcc"
-  }.dropRight(2)
 
-  def format(section: Section): Option[String] = if (hasSection(section))
-    Some(
-      ini(section).foldRight("") {
-        case ((key, value), acc) =>
-          s"$key=$value\n$acc"
-      }
-    )
-  else
-    None
+  /**
+   * Returns a textual representation of the [[Ini]].
+   * Sorts the sections and the keys of each section alphabetically (ascending).
+   *
+   * Example:
+   * {{{
+   * [A]
+   * a=value
+   * b=value
+   * c=value
+   *
+   * [B]
+   * a=value
+   * b=value
+   * }}}
+   *
+   * @return the textual representation of the [[Ini]]
+   */
+  def format: String = ini.toSeq.sorted.foldRight("") {
+    case ((section, entries), sectionAcc) =>
+      s"[$section]\n${format(section) getOrElse ""}\n$sectionAcc"
+  }.stripTrailing
+
+  /**
+   * Returns a textual representation of the given [[Section]].
+   * The result won't contain the [[Section]] heading.
+   * Sorts the keys alphabetically (ascending).
+   * Example:
+   * {{{
+   * a=value
+   * b=value
+   * c=value
+   * }}}
+   *
+   * @param section [[Section]] to format
+   * @return [[Some]] textual representation of the given section if the section exists
+   *
+   *         [[None]] otherwise
+   */
+  def format(section: Section): Option[String] =
+    if (hasSection(section)) {
+      Some(
+        ini(section).toSeq.sorted.foldRight("") {
+          case ((key, value), acc) => s"$key=$value\n$acc"
+        }.stripTrailing
+      )
+    } else
+      None
   
   def hasSection: Section => Boolean = ini.contains
   def hasKey(section: Section, key: Key): Boolean = ini.contains(section) && ini(section).contains(key)
@@ -50,12 +83,12 @@ extension (ini: Ini)
       false
 
 object Ini:
+  def apply(): Ini = mutable.Map()
+
   def from(source: String): Option[Ini] = Parser.parse(Parser.ini, source) match {
     case Success(result, _) => Some(result)
     case _: NoSuccess => None
   }
-
-  def apply(): Ini = mutable.Map()
 
 // https://www.baeldung.com/scala/try-with-resources
 // import scala.util.Using

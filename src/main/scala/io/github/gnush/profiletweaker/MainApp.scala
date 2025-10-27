@@ -22,8 +22,6 @@ import java.nio.file.{FileAlreadyExistsException, NoSuchFileException}
 import java.time.LocalDateTime
 
 // TODO:
-//  - sort when loading ini to text area
-//  - sort when saving to ini
 //  - make text area searchable
 object MainApp extends JFXApp3:
   private var config = Config()

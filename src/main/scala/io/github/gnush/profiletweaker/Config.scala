@@ -41,11 +41,7 @@ class Config(private val ini: Ini = Ini()) {
 
   def guiStateLocation_=(location: String): Unit = update(ConfigSection, guiStateLocationKey, location)
 
-  def guiStateSettings: String =
-    if (ini.hasSection(ProfileSection))
-      ini(ProfileSection).map((key, value) => s"$key=$value").mkString("\n")
-    else
-      ""
+  def guiStateSettings: String = ini.format(ProfileSection) getOrElse ""
 
   def guiStateSettings_=(settings: String): Unit = {
     // current profile settings as ini
