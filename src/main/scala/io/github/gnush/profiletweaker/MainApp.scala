@@ -34,14 +34,16 @@ object MainApp extends JFXApp3:
   override def start(): Unit = {
     playGuiStateTargets = new ListView[CharacterGuiStateItem] {
       items = ViewModel.playerGuiStateTargets
-      prefHeight = 486
-      prefWidth = 320
+      prefWidth = 280
+      vgrow = Always
     }
     playGuiStateTargets.selectionModel.value.setSelectionMode(SelectionMode.Multiple)
 
     guiStateSettings = new TextArea {
       text <==> ViewModel.guiStateSettings
-      prefHeight = 486
+      prefHeight = 600
+      prefWidth = 800
+      vgrow = Always
 
       onKeyPressed = ev => ev.getCode match {
         case KeyCode.F if ev.isShortcutDown =>
@@ -185,7 +187,9 @@ object MainApp extends JFXApp3:
 
   private def editPane = new VBox {
     private val section = "Settings"
+
     alignment = TopCenter
+    hgrow = Always
     children = Seq(
       Text(s"[$section]"),
 //      new TextArea {
