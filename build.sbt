@@ -45,9 +45,6 @@ libraryDependencies += "org.scalafx" %% "scalafx" % "23.0.1-R34" exclude ("org.o
 //libraryDependencies ++= Seq("linux", "mac", "win") flatMap (osName =>
 //  Seq("base", "controls", "fxml", "graphics", "media", "swing", "web")
 //    .map(m => "org.openjfx" % s"javafx-$m" % "23" classifier osName))
-// TODO: create Makefile to package three different versions from 'sbt pack' result
-//       https://stackoverflow.com/questions/16878295/how-do-makefile-dependencies-work
-//       https://www.jfranken.de/homepages/johannes/vortraege/make.de.html
 libraryDependencies ++= Seq("linux", "mac", "win") flatMap (osName =>
   Seq("base", "controls", "graphics", "media")
     .map(m => "org.openjfx" % s"javafx-$m" % "23" classifier osName))

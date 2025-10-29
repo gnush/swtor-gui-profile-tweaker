@@ -2,6 +2,8 @@
 
 all: linux windows mac
 
+# TODO: add direct start script to archives or move start script from bin to . (and refactor paths?)
+
 linux: pack
 	sh zip-exclude.sh linux.zip target/pack *win.jar *mac.jar Makefile VERSION *.bat
 
