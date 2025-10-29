@@ -5,43 +5,15 @@ shell := /bin/bash
 .PHONY: pack
 
 all: linux windows mac
-	@rm -rf $(TMP)
 
-linux: pack tmp
-	@echo Make linux package
-	@mkdir -p $(TMP)/linux/bin
-	@mkdir -p $(TMP)/linux/lib
-	cp target/pack/bin/guiStateTweaker $(TMP)/linux/bin
-	find target/pack/lib -type f\
-		-not -iname '*win.jar'\
-		-not -iname '*mac.jar'\
-		-exec cp {} '$(TMP)/linux/lib' ';'
-	sh zipall.sh linux.zip $(TMP)/linux
+linux: pack
+	sh zip-exclude.sh linux.zip target/pack *win.jar *mac.jar Makefile VERSION *.bat
 
-windows: pack tmp
-	@echo Make windows package
-	@mkdir -p $(TMP)/windows/bin
-	@mkdir -p $(TMP)/windows/lib
-	cp target/pack/bin/guiStateTweaker.bat $(TMP)/windows/bin
-	find target/pack/lib -type f\
-		-not -iname '*linux.jar'\
-		-not -iname '*mac.jar'\
-		-exec cp {} '$(TMP)/windows/lib' ';'
-	sh zipall.sh windows.zip $(TMP)/windows
+windows: pack
+	sh zip-exclude.sh windows.zip target/pack *linux.jar *mac.jar Makefile VERSION bin/guiStateTweaker
 
-mac: pack tmp
-	@echo Make mac package
-	@mkdir -p $(TMP)/mac/bin
-	@mkdir -p $(TMP)/mac/lib
-	cp target/pack/bin/guiStateTweaker $(TMP)/mac/bin
-	find target/pack/lib -type f\
-		-not -iname '*linux.jar'\
-		-not -iname '*win.jar'\
-		-exec cp {} '$(TMP)/mac/lib' ';'
-	sh zipall.sh mac.zip $(TMP)/mac
+mac: pack
+	sh zip-exclude.sh mac.zip target/pack *linux.jar *win.jar Makefile VERSION *.bat
 
 pack:
 	sbt pack
-
-tmp:
-	$(eval TMP := $(shell mktemp -d))
