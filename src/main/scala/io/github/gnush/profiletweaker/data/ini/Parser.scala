@@ -10,7 +10,6 @@ type Value = String
 type Ini = mutable.Map[Section, mutable.Map[Key, Value]]
 
 extension (ini: Ini)
-
   /**
    * Returns a textual representation of the [[Ini]].
    * Sorts the sections and the keys of each section alphabetically (ascending).
@@ -29,7 +28,7 @@ extension (ini: Ini)
    *
    * @return the textual representation of the [[Ini]]
    */
-  def format: String = ini.toSeq.sorted.foldRight("") {
+  def format: String = ini.toSeq.sortBy(_._1).foldRight("") {
     case ((section, entries), sectionAcc) =>
       s"[$section]\n${format(section) getOrElse ""}\n$sectionAcc"
   }.stripTrailing
