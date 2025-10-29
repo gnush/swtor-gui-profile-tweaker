@@ -1,7 +1,3 @@
-# Depends on: rsync
-
-shell := /bin/bash
-
 .PHONY: pack
 
 all: linux windows mac
