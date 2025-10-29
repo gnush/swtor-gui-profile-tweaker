@@ -34,7 +34,7 @@ class Config(private val ini: Ini = Ini()) {
 
   def guiStateLocation: String = get(ConfigSection, guiStateLocationKey) getOrElse (
     if (System.getProperty("os.name").toLowerCase.contains("windows"))
-      "/%appdata%/SWTOR/swtor/settings"
+       s"${os.home}/AppData/Local/SWTOR/swtor/settings"
     else
       os.home.toString
   )
