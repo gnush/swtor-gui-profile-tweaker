@@ -1,10 +1,9 @@
 package io.github.gnush.profiletweaker
 
-import io.github.gnush.profiletweaker.MainApp.stage
 import io.github.gnush.profiletweaker.data.ini.*
 import io.github.gnush.profiletweaker.data.{CharacterGuiStateItem, Server}
 import javafx.scene.input.KeyCode
-import os.Path
+import os.{FilePath, Path, RelPath, SubPath}
 import scalafx.application.JFXApp3
 import scalafx.collections.ObservableBuffer
 import scalafx.collections.CollectionIncludes.observableList2ObservableBuffer
@@ -24,7 +23,15 @@ import java.time.LocalDateTime
 
 object MainApp extends JFXApp3:
   private var config = Config()
-  private val configFile = "config.ini"
+
+  private val configFileName = "config.ini"
+  private val configFile: Path = Option(System.getProperty("prog.home")) match {
+    case Some(path) => FilePath(path) match {
+      case x: Path => x/configFileName
+      case x: (RelPath|SubPath) => Path(x, os.pwd)/configFileName
+    }
+    case None => os.pwd/configFileName
+  }
 
   // TODO
   private var playGuiStateTargets: ListView[CharacterGuiStateItem] = null
@@ -82,8 +89,8 @@ object MainApp extends JFXApp3:
     }
 
     // Load config
-    config = if (os.exists(os.pwd / configFile) && os.isReadable(os.pwd / configFile))
-      Config(os.read(os.pwd / configFile))
+    config = if (os.exists(configFile) && os.isReadable(configFile))
+      Config(os.read(configFile))
     else
       Config()
     populateViewModel(config)
@@ -283,7 +290,7 @@ object MainApp extends JFXApp3:
     config.guiStateLocation = ViewModel.playerGuiStateLocation.value
 
     if (config.hasBeenChanged && os.isWritable(os.pwd))
-      os.write.over(os.pwd / configFile, config.toIniFormat)
+      os.write.over(configFile, config.toIniFormat)
   }
 
   /**

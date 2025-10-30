@@ -129,14 +129,6 @@ object Ini:
     case _: NoSuccess => None
   }
 
-// https://www.baeldung.com/scala/try-with-resources
-// import scala.util.Using
-//  def from(path: String): Option[Ini] = {
-//    Using(fromFile(path)) { source =>
-//      from(source.getLines() mkString "\n")
-//    }
-//  }
-
   def read(file: String): Option[Ini] = {
     val source = fromFile(file)
     try from(source.getLines() mkString "\n") finally source.close()
