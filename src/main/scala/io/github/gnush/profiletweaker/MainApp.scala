@@ -89,7 +89,7 @@ object MainApp extends JFXApp3:
     populateViewModel(config)
 
     // Populate available character gui states
-    loadGuiStateInis(config.guiStateLocation)
+    loadGuiStateInis(config.guiStateLocation.toString)
   }
 
   override def stopApp(): Unit = {
@@ -269,7 +269,7 @@ object MainApp extends JFXApp3:
     ViewModel.overwriteBackup.value = config.overwriteBackup
     ViewModel.backupDir.value = config.backupDir
     ViewModel.guiStateSettings.value = config.guiStateSettings
-    ViewModel.playerGuiStateLocation.value = config.guiStateLocation
+    ViewModel.playerGuiStateLocation.value = config.guiStateLocation.toString
   }
 
   /**

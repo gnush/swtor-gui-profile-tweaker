@@ -6,6 +6,7 @@ target/
 ### Project Specific ###
 /config.ini
 /ui_mocks
+*.zip
 
 # not an .idea project (maybe remove later)
 .idea

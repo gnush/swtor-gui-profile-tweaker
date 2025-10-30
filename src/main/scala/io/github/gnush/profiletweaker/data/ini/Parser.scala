@@ -39,9 +39,9 @@ extension (ini: Ini)
    * Sorts the keys alphabetically (ascending).
    * Example:
    * {{{
-   * a=value
-   * b=value
-   * c=value
+   *   a=value
+   *   b=value
+   *   c=value
    * }}}
    *
    * @param section [[Section]] to format
@@ -62,29 +62,69 @@ extension (ini: Ini)
   def hasSection: Section => Boolean = ini.contains
   def hasKey(section: Section, key: Key): Boolean = ini.contains(section) && ini(section).contains(key)
 
+  /**
+   * Puts the [[Key]]=[[Value]] pairs into [[Section]] of this [[Ini]].
+   * When the section already exists, it will be overwritten.
+   * Returns true if the content of the section changed, false otherwise.
+   * 
+   * @return true if the content of the section changed, false otherwise
+   */
   def put(section: Section, content: mutable.Map[Key, Value]): Boolean =
-    if (!section.isBlank)
+    if (!section.isBlank && content.forall((key, value) => !key.isBlank && !value.isBlank))
       ini += section -> content
-      true
+      ini(section) == content
     else
       false
 
+  /**
+   * Associates [[Key]] with [[Value]] in [[Section]] of this [[Ini]].
+   * When the key already exists, the value will be overwritten.
+   * Returns true if a new value has been associated, false otherwise. 
+   * 
+   * Example:
+   * {{{
+   *   [A]
+   *   a=value
+   *   b=value
+   * }}}
+   * 
+   * {{{
+   *   put(A, a, other) == true
+   *   put(A, b, value) == false
+   *   put(A, c, value) == true
+   *   put(B, a, value) == true
+   * }}}
+   * 
+   * {{{
+   *   [A]
+   *   a=other
+   *   b=value
+   *   c=value
+   *   
+   *   [B]
+   *   a=value
+   * }}}
+   * 
+   * @return true if a new value has been associated, false otherwise
+   */
   def put(section: Section, key: Key, value: Value): Boolean =
     if (!section.isBlank && !key.isBlank && !value.isBlank)
       if (hasKey(section, key))
         ini(section)(key) = value
+        ini(section)(key) != value
       else if (hasSection(section))
         ini(section) += key -> value
+        true
       else
         ini += section -> mutable.Map(key -> value)
-      true
+        true
     else
       false
 
 object Ini:
   def apply(): Ini = mutable.Map()
 
-  def from(source: String): Option[Ini] = Parser.parse(Parser.ini, source) match {
+  def from(content: String): Option[Ini] = Parser.parse(Parser.ini, content) match {
     case Success(result, _) => Some(result)
     case _: NoSuccess => None
   }

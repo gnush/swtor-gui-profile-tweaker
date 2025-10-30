@@ -1,10 +1,8 @@
 package io.github.gnush.profiletweaker
 
 import data.ini.{Ini, Key, Section, Value, format, hasKey, hasSection, put}
+import os.Path
 
-// TODO:
-//  - merge with ViewModel  (eliminates double data holding, but mixes "scopes")?
-//  - change hasBeenChanged from tracking updates to comparing with initial value
 class Config(private val ini: Ini = Ini()) {
   def this(config: String) = {
     this(Ini.from(config) getOrElse Ini())
@@ -32,14 +30,19 @@ class Config(private val ini: Ini = Ini()) {
 
   def backupDir_=(dirName: String): Unit = update(ConfigSection, backupDirKey, dirName)
 
-  def guiStateLocation: String = get(ConfigSection, guiStateLocationKey) getOrElse (
-    if (System.getProperty("os.name").toLowerCase.contains("windows"))
-       s"${os.home}/AppData/Local/SWTOR/swtor/settings"
-    else
-      os.home.toString
-  )
+  def guiStateLocation: Path = try {
+    os.Path(get(ConfigSection, guiStateLocationKey).get)
+  } catch {
+    case _: Exception =>
+      if (System.getProperty("os.name").toLowerCase.contains("windows"))
+        os.home / "AppData" / "Local" / "SWTOR" / "swtor" / "settings"
+      else
+        os.home
+  }
 
   def guiStateLocation_=(location: String): Unit = update(ConfigSection, guiStateLocationKey, location)
+
+  def guiStateLocation_=(location: Path): Unit = update(ConfigSection, guiStateLocationKey, location.toString)
 
   def guiStateSettings: String = ini.format(ProfileSection) getOrElse ""
 
