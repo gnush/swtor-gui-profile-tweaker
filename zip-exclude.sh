@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #############################################
 # Zips all files in SRC dir to TARGET       #
 # Overwrites TARGET if it already exists    #
@@ -22,6 +22,6 @@ TARGET="$1"
 SRC="$2"
 WD=$(pwd)
 
-cd $SRC
-zip -q -r $WD/$TARGET . --exclude ${@:3}
-cd $WD
+cd "$SRC" || exit
+zip -q -r "$WD/$TARGET" . --exclude "${@:3}"
+cd "$WD"
