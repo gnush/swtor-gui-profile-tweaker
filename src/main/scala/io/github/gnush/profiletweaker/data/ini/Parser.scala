@@ -110,8 +110,9 @@ extension (ini: Ini)
   def put(section: Section, key: Key, value: Value): Boolean =
     if (!section.isBlank && !key.isBlank && !value.isBlank)
       if (hasKey(section, key))
+        val valueChanged = ini(section)(key) != value
         ini(section)(key) = value
-        ini(section)(key) != value
+        valueChanged
       else if (hasSection(section))
         ini(section) += key -> value
         true
