@@ -7,7 +7,7 @@ import os.{FilePath, Path, RelPath, SubPath}
 import scalafx.application.JFXApp3
 import scalafx.collections.ObservableBuffer
 import scalafx.collections.CollectionIncludes.observableList2ObservableBuffer
-import scalafx.geometry.Pos.{Center, CenterLeft, TopCenter}
+import scalafx.geometry.Pos.{Center, CenterLeft, CenterRight, TopCenter}
 import scalafx.geometry.{HPos, Insets}
 import scalafx.scene.control.*
 import scalafx.scene.control.Alert.AlertType.Information
@@ -33,7 +33,8 @@ object MainApp extends JFXApp3:
     case None => os.pwd/configFileName
   }
 
-  // TODO
+  // TODO:  - get rid of null
+  //        - make guiStateSettings private (and refactor the dependency in ViewModel)
   private var playGuiStateTargets: ListView[CharacterGuiStateItem] = null
   var guiStateSettings: TextArea = null
   private var guiStateSettingsSearch: TextField = null
@@ -110,8 +111,8 @@ object MainApp extends JFXApp3:
       left = 4,
       right = 2
     )
-    children = Seq(settings, availablePlayerGuiStatePane, editPane)
     spacing = 8
+    children = Seq(availablePlayerGuiStatePane, editPane, settings)
   }
 
   private def settings = {
@@ -142,7 +143,7 @@ object MainApp extends JFXApp3:
     }
   }
 
-  private def availablePlayerGuiStatePane= new VBox {
+  private def availablePlayerGuiStatePane = new VBox {
     alignment = TopCenter
     children = Seq(
       Text("Player GUI State"),
@@ -289,7 +290,7 @@ object MainApp extends JFXApp3:
     config.guiStateSettings = ViewModel.guiStateSettings.value
     config.guiStateLocation = ViewModel.playerGuiStateLocation.value
 
-    if (config.hasBeenChanged && os.isWritable(os.pwd))
+    if (config.hasBeenChanged && os.isWritable(configFile))
       os.write.over(configFile, config.toIniFormat)
   }
 
