@@ -24,14 +24,16 @@ import java.time.LocalDateTime
 object MainApp extends JFXApp3:
   private var config = Config()
 
-  private val configFileName = "config.ini"
-  private val configFile: Path = Option(System.getProperty("prog.home")) match {
+  private val progHome = Option(System.getProperty("prog.home")) match {
     case Some(path) => FilePath(path) match {
-      case x: Path => x/configFileName
-      case x: (RelPath|SubPath) => Path(x, os.pwd)/configFileName
+      case x: Path => x
+      case x: (RelPath|SubPath) => Path(x, os.pwd)
     }
-    case None => os.pwd/configFileName
+    case None => os.pwd
   }
+
+  private val configFileName = "config.ini"
+  private val configFile: Path = progHome/configFileName
 
   // TODO:  - get rid of null
   //        - make guiStateSettings private (and refactor the dependency in ViewModel)
@@ -290,7 +292,7 @@ object MainApp extends JFXApp3:
     config.guiStateSettings = ViewModel.guiStateSettings.value
     config.guiStateLocation = ViewModel.playerGuiStateLocation.value
 
-    if (config.hasBeenChanged && os.isWritable(configFile))
+    if (config.hasBeenChanged && os.isWritable(progHome))
       os.write.over(configFile, config.toIniFormat)
   }
 
