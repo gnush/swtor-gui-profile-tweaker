@@ -12,7 +12,9 @@ int main() {
         return errno;
     }
 
-    char *self_path = dirname(self_exe); // glibc, see bugs: https://man7.org/linux/man-pages/man3/dirname.3.html
+    // glibc, see bugs: https://man7.org/linux/man-pages/man3/dirname.3.html
+    // will overwrite self_exe
+    char *self_path = dirname(self_exe);
 
     char classpath[2048];
     sprintf(classpath, "%s/lib/*", self_path);
@@ -31,5 +33,5 @@ int main() {
     };
 
     execvp(prog, argv);
-    printf("Error: %i\n", errno);
+    perror("execvp");
 }
