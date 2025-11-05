@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <process.h>
 #include <errno.h>
@@ -25,7 +26,8 @@ int main() {
     char prog_home[1040];
     sprintf(prog_home, "-Dprog.home=%s%s", self_drive, self_dir);
 
-    char *prog = "java.exe";
+    // use javaw instead of java to get rid of the console window
+    char *prog = "javaw.exe";
     const char* const argv[] = {
         prog,
         "-cp",
@@ -36,5 +38,5 @@ int main() {
     };
 
     _spawnvp(_P_OVERLAY, prog, argv);
-    perror("_spawnvp");
+    perror(prog);
 }

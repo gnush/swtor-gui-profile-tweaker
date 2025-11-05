@@ -33,5 +33,5 @@ int main() {
     };
 
     execvp(prog, argv);
-    perror("execvp");
+    perror(prog);
 }
