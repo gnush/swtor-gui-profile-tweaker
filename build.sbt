@@ -14,7 +14,7 @@ packMain := Map("guiStateTweaker" -> "io.github.gnush.profiletweaker.MainApp")
 
 lazy val root = (project in file("."))
   .settings(
-    name := "SW:ToR GUI Profile Tweaker"
+    name := "SW:ToR GUI State Tweaker"
   )
 
 libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % "2.4.0"
